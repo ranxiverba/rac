@@ -203,6 +203,8 @@ mod secp256k1_m {
 
     impl Line for SecretKey {
         fn clone_array(a: &GenericArray<u8, Self::Length>) -> Self {
+            // panics if `a` is zero or does not fit in the finite field
+            // safe to unwrap, because it is impossible to handle such errors
             Self::try_clone_array(a).unwrap()
         }
     }
@@ -212,12 +214,16 @@ mod secp256k1_m {
 
         fn add_ff(&self, rhs: &Self) -> Self {
             let mut c = self.clone();
+            // panics if the resulting scalar is zero or does not fit in the finite field
+            // safe to unwrap, because it is extremely rare
             c.add_assign(rhs.clone_line().as_slice()).unwrap();
             c
         }
 
         fn mul_ff(&self, rhs: &Self) -> Self {
             let mut c = self.clone();
+            // panics if the resulting scalar is zero or does not fit in the finite field
+            // safe to unwrap, because it is extremely rare
             c.mul_assign(rhs.clone_line().as_slice()).unwrap();
             c
         }
@@ -259,6 +265,7 @@ mod secp256k1_m {
                 0xFD, 0x17, 0xB4, 0x48, 0xA6, 0x85, 0x54, 0x19,
                 0x9C, 0x47, 0xD0, 0x8F, 0xFB, 0x10, 0xD4, 0xB8,
             ];
+            // safe to unwrap, because the constant
             PublicKey::from_slice(buffer.as_ref()).unwrap()
         }
 
@@ -272,6 +279,8 @@ mod secp256k1_m {
 
             let context = Secp256k1::verification_only();
             let mut c = self.clone();
+            // panics if the scalar is zero or greater than the order of the base point
+            // safe to unwrap, because it is extremely rare
             c.mul_assign(&context, rhs.clone_line().as_slice()).unwrap();
             c
         }
@@ -306,6 +315,7 @@ mod secp256k1_m {
             use secp256k1::{Secp256k1, Message};
 
             let context = Secp256k1::signing_only();
+            // safe to unwrap because the type system guarantee the length of the slice is proper
             let m = Message::from_slice(message.clone_line().as_slice()).unwrap();
             context.sign(&m, &secret_key)
         }
@@ -314,6 +324,7 @@ mod secp256k1_m {
             use secp256k1::{Secp256k1, Message};
 
             let context = Secp256k1::verification_only();
+            // safe to unwrap because the type system guarantee the length of the slice is proper
             let m = Message::from_slice(message.clone_line().as_slice()).unwrap();
             context.verify(&m, self, public_key).map_err(|_| ())
         }
@@ -421,6 +432,7 @@ mod chacha20_poly1305_aead_m {
             LittleEndian::write_u64(&mut nonce_bytes[4..], nonce);
 
             let mut output = Cursor::new(output.as_mut());
+            // safe to unwrap, because write to slice never fails
             let array = encrypt(
                 self.0.as_slice(),
                 nonce_bytes.as_ref(),
