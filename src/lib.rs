@@ -2,7 +2,7 @@
 #![cfg_attr(not(feature = "use_std"), no_std)]
 
 use core::ops::Add;
-use generic_array::{GenericArray, ArrayLength, arr::AddLength};
+use generic_array::{GenericArray, ArrayLength, arr::AddLength, typenum::U1};
 
 pub trait LineValid
 where
@@ -125,6 +125,46 @@ where
     fn inv_ff(&self) -> Self;
 }
 
+pub struct PackedCurve<S>
+where
+    S: Scalar,
+{
+    sign: bool,
+    x: S,
+}
+
+impl<S> LineValid for PackedCurve<S>
+where
+    S: Scalar,
+    Concat<GenericArray<u8, U1>, S>: Line,
+{
+    type Length = <Concat<GenericArray<u8, U1>, S> as LineValid>::Length;
+
+    fn try_clone_array(a: &GenericArray<u8, Self::Length>) -> Result<Self, ()> {
+        let Concat(header, x): Concat<GenericArray<u8, U1>, S> = Concat::clone_array(a);
+        match header[0] {
+            0x02 => Ok(PackedCurve {
+                sign: false,
+                x: x,
+            }),
+            0x03 => Ok(PackedCurve {
+                sign: true,
+                x: x,
+            }),
+            _ => Err(())
+        }
+    }
+
+    fn clone_line(&self) -> GenericArray<u8, Self::Length> {
+        let sign = self.sign.clone();
+        let x = S::clone_array(&self.x.clone_line());
+
+        let header = GenericArray::clone_from_slice(&[if sign { 0x03 } else { 0x02 }]);
+        let concat = Concat::<GenericArray<u8, U1>, S>(header, x);
+        concat.clone_line()
+    }
+}
+
 pub trait Curve
 where
     Self: LineValid,
@@ -134,7 +174,7 @@ where
     fn base() -> Self;
     fn mul_ec(&self, rhs: &Self) -> Self;
     fn exp_ec(&self, rhs: &Self::Scalar) -> Self;
-    fn compress(&self) -> (bool, Self::Scalar);
+    fn compress(&self) -> PackedCurve<Self::Scalar>;
 }
 
 pub trait Signature
@@ -182,7 +222,7 @@ where
 
 #[cfg(feature = "secp256k1")]
 mod secp256k1_m {
-    use super::{LineValid, Line, Scalar, Curve, Signature};
+    use super::{LineValid, Line, Scalar, PackedCurve, Curve, Signature};
     use generic_array::{
         GenericArray,
         typenum::{U32, U64},
@@ -285,11 +325,13 @@ mod secp256k1_m {
             c
         }
 
-        fn compress(&self) -> (bool, Self::Scalar) {
+        fn compress(&self) -> PackedCurve<SecretKey> {
             let buffer = self.serialize();
             let mut a = GenericArray::default();
-            a.clone_from_slice(&buffer[1..]);
-            (buffer[0] & 1 == 1, Self::Scalar::clone_array(&a))
+            a.clone_from_slice(buffer.as_ref());
+            // safe to unwrap, because we believe `PublicKey::serialize`
+            // implementation is correct
+            PackedCurve::try_clone_array(&a).unwrap()
         }
     }
 
