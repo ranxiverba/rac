@@ -388,6 +388,9 @@ mod secp256k1_m {
 }
 
 #[cfg(all(feature = "chacha20-poly1305-aead", feature = "use_std"))]
+pub use self::chacha20_poly1305_aead_m::{Chacha20Poly1305AeadTag, Chacha20Poly1305AeadKey};
+
+#[cfg(all(feature = "chacha20-poly1305-aead", feature = "use_std"))]
 mod chacha20_poly1305_aead_m {
     use super::{LineValid, Line, Tag, Key};
     use core::fmt;
