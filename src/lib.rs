@@ -142,17 +142,10 @@ where
 
     fn try_clone_array(a: &GenericArray<u8, Self::Length>) -> Result<Self, ()> {
         let Concat(header, x): Concat<GenericArray<u8, U1>, S> = Concat::clone_array(a);
-        match header[0] {
-            0x02 => Ok(PackedCurve {
-                sign: false,
-                x: x,
-            }),
-            0x03 => Ok(PackedCurve {
-                sign: true,
-                x: x,
-            }),
-            _ => Err(())
-        }
+        Ok(PackedCurve {
+            sign: header[0] & 1 == 1,
+            x: x,
+        })
     }
 
     fn clone_line(&self) -> GenericArray<u8, Self::Length> {
@@ -162,6 +155,20 @@ where
         let header = GenericArray::clone_from_slice(&[if sign { 0x03 } else { 0x02 }]);
         let concat = Concat::<GenericArray<u8, U1>, S>(header, x);
         concat.clone_line()
+    }
+}
+
+impl<S> Line for PackedCurve<S>
+where
+    S: Scalar,
+    Concat<GenericArray<u8, U1>, S>: Line,
+{
+    fn clone_array(a: &GenericArray<u8, Self::Length>) -> Self {
+        let Concat(header, x): Concat<GenericArray<u8, U1>, S> = Concat::clone_array(a);
+        PackedCurve {
+            sign: header[0] & 1 == 1,
+            x: x,
+        }
     }
 }
 
