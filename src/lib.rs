@@ -181,6 +181,7 @@ where
     fn base() -> Self;
     fn mul_ec(&self, rhs: &Self) -> Self;
     fn exp_ec(&self, rhs: &Self::Scalar) -> Self;
+    fn decompress(packed: &PackedCurve<Self::Scalar>) -> Self;
     fn compress(&self) -> PackedCurve<Self::Scalar>;
 }
 
@@ -330,6 +331,12 @@ mod secp256k1_m {
             // safe to unwrap, because it is extremely rare
             c.mul_assign(&context, rhs.clone_line().as_slice()).unwrap();
             c
+        }
+
+        fn decompress(packed: &PackedCurve<Self::Scalar>) -> Self {
+            let array = packed.clone_line();
+            // safe to unwrap because `PackedCurve::clone_line` yields correct array
+            PublicKey::from_slice(array.as_slice()).unwrap()
         }
 
         fn compress(&self) -> PackedCurve<SecretKey> {
