@@ -1,4 +1,4 @@
-use crate::{LineValid, Line, Scalar, PackedCurve, Curve, Signature};
+use crate::{LineValid, Line, Concat, Scalar, CompressedCurve, CurveSign, Curve, Signature};
 
 use generic_array::{
     GenericArray,
@@ -67,7 +67,10 @@ impl LineValid for PublicKey {
     }
 }
 
-impl Curve for PublicKey {
+impl Curve for PublicKey
+where
+    Concat<CurveSign, SecretKey>: LineValid,
+{
     type Scalar = SecretKey;
 
     fn base() -> Self {
@@ -102,19 +105,16 @@ impl Curve for PublicKey {
         c
     }
 
-    fn decompress(packed: &PackedCurve<Self::Scalar>) -> Self {
-        let array = packed.clone_line();
+    fn decompress(packed: &CompressedCurve<Self::Scalar>) -> Self {
         // safe to unwrap because `PackedCurve::clone_line` yields correct array
-        PublicKey::from_slice(array.as_slice()).unwrap()
+        PublicKey::from_slice(packed.as_slice()).unwrap()
     }
 
-    fn compress(&self) -> PackedCurve<SecretKey> {
+    fn compress(&self) -> CompressedCurve<SecretKey> {
         let buffer = self.serialize();
-        let mut a = GenericArray::default();
+        let mut a = CompressedCurve::<SecretKey>::default();
         a.clone_from_slice(buffer.as_ref());
-        // safe to unwrap, because we believe `PublicKey::serialize`
-        // implementation is correct
-        PackedCurve::try_clone_array(&a).unwrap()
+        a
     }
 }
 

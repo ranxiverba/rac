@@ -8,7 +8,7 @@ mod concat;
 pub use self::concat::Concat;
 
 mod elliptic;
-pub use self::elliptic::{Scalar, PackedCurve, Curve, Signature};
+pub use self::elliptic::{Scalar, CompressedCurve, CurveSign, Curve, Signature};
 
 mod symmetric;
 pub use self::symmetric::{Tag, Key};
