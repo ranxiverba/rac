@@ -1,8 +1,8 @@
-use crate::{LineValid, Line, Concat, Scalar, CompressedCurve, CurveSign, Curve, Signature};
+use crate::{LineValid, Line, Scalar, Curve, Signature};
 
 use generic_array::{
     GenericArray,
-    typenum::{U32, U64},
+    typenum::{U32, U33, U64},
 };
 use secp256k1::{SecretKey, PublicKey, Signature as Secp256k1Signature};
 
@@ -67,11 +67,9 @@ impl LineValid for PublicKey {
     }
 }
 
-impl Curve for PublicKey
-where
-    Concat<CurveSign, SecretKey>: LineValid,
-{
+impl Curve for PublicKey {
     type Scalar = SecretKey;
+    type CompressedLength = U33;
 
     fn base() -> Self {
         let buffer = [
@@ -105,14 +103,14 @@ where
         c
     }
 
-    fn decompress(packed: &CompressedCurve<Self::Scalar>) -> Self {
+    fn decompress(packed: &GenericArray<u8, Self::CompressedLength>) -> Self {
         // safe to unwrap because `PackedCurve::clone_line` yields correct array
         PublicKey::from_slice(packed.as_slice()).unwrap()
     }
 
-    fn compress(&self) -> CompressedCurve<SecretKey> {
+    fn compress(&self) -> GenericArray<u8, Self::CompressedLength> {
         let buffer = self.serialize();
-        let mut a = CompressedCurve::<SecretKey>::default();
+        let mut a = GenericArray::default();
         a.clone_from_slice(buffer.as_ref());
         a
     }
