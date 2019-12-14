@@ -1,4 +1,4 @@
-use crate::{LineValid, Line, Scalar, Curve, Signature};
+use crate::{LineValid, Scalar, Curve, Signature};
 
 use generic_array::{
     GenericArray,
@@ -18,34 +18,20 @@ impl LineValid for SecretKey {
     }
 }
 
-impl Line for SecretKey {
-    fn clone_array(a: &GenericArray<u8, Self::Length>) -> Self {
-        // panics if `a` is zero or does not fit in the finite field
-        // safe to unwrap, because it is impossible to handle such errors
-        Self::try_clone_array(a).unwrap()
-    }
-}
-
 impl Scalar for SecretKey {
-    const NAME: &'static str = "secp256k1";
-
-    fn add_ff(&self, rhs: &Self) -> Self {
+    fn add_ff(&self, rhs: &Self) -> Result<Self, ()> {
         let mut c = self.clone();
-        // panics if the resulting scalar is zero or does not fit in the finite field
-        // safe to unwrap, because it is extremely rare
-        c.add_assign(rhs.clone_line().as_slice()).unwrap();
-        c
+        c.add_assign(rhs.clone_line().as_slice()).map_err(|_| ())?;
+        Ok(c)
     }
 
-    fn mul_ff(&self, rhs: &Self) -> Self {
+    fn mul_ff(&self, rhs: &Self) -> Result<Self, ()> {
         let mut c = self.clone();
-        // panics if the resulting scalar is zero or does not fit in the finite field
-        // safe to unwrap, because it is extremely rare
-        c.mul_assign(rhs.clone_line().as_slice()).unwrap();
-        c
+        c.mul_assign(rhs.clone_line().as_slice()).map_err(|_| ())?;
+        Ok(c)
     }
 
-    fn inv_ff(&self) -> Self {
+    fn inv_ff(&self) -> Result<Self, ()> {
         unimplemented!()
     }
 }
@@ -70,6 +56,8 @@ impl LineValid for PublicKey {
 impl Curve for PublicKey {
     type Scalar = SecretKey;
     type CompressedLength = U33;
+
+    const NAME: &'static str = "secp256k1";
 
     fn base() -> Self {
         let buffer = [
@@ -98,14 +86,13 @@ impl Curve for PublicKey {
         let context = Secp256k1::verification_only();
         let mut c = self.clone();
         // panics if the scalar is zero or greater than the order of the base point
-        // safe to unwrap, because it is extremely rare
+        // safe to unwrap, because the type system guarantee the scalar is valid
         c.mul_assign(&context, rhs.clone_line().as_slice()).unwrap();
         c
     }
 
-    fn decompress(packed: &GenericArray<u8, Self::CompressedLength>) -> Self {
-        // safe to unwrap because `PackedCurve::clone_line` yields correct array
-        PublicKey::from_slice(packed.as_slice()).unwrap()
+    fn decompress(packed: &GenericArray<u8, Self::CompressedLength>) -> Result<Self, ()> {
+        PublicKey::from_slice(packed.as_slice()).map_err(|_| ())
     }
 
     fn compress(&self) -> GenericArray<u8, Self::CompressedLength> {

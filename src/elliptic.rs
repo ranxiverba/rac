@@ -1,16 +1,14 @@
-use crate::line::{LineValid, Line};
+use crate::line::LineValid;
 
 use generic_array::{GenericArray, ArrayLength};
 
 pub trait Scalar
 where
-    Self: Line,
+    Self: LineValid,
 {
-    const NAME: &'static str;
-
-    fn add_ff(&self, rhs: &Self) -> Self;
-    fn mul_ff(&self, rhs: &Self) -> Self;
-    fn inv_ff(&self) -> Self;
+    fn add_ff(&self, rhs: &Self) -> Result<Self, ()>;
+    fn mul_ff(&self, rhs: &Self) -> Result<Self, ()>;
+    fn inv_ff(&self) -> Result<Self, ()>;
 }
 
 pub trait Curve
@@ -20,10 +18,12 @@ where
     type Scalar: Scalar;
     type CompressedLength: ArrayLength<u8>;
 
+    const NAME: &'static str;
+
     fn base() -> Self;
     fn mul_ec(&self, rhs: &Self) -> Self;
     fn exp_ec(&self, rhs: &Self::Scalar) -> Self;
-    fn decompress(packed: &GenericArray<u8, Self::CompressedLength>) -> Self;
+    fn decompress(packed: &GenericArray<u8, Self::CompressedLength>) -> Result<Self, ()>;
     fn compress(&self) -> GenericArray<u8, Self::CompressedLength>;
 }
 
