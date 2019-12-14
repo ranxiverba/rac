@@ -3,6 +3,9 @@ name = "rac"
 version = "0.1.0"
 authors = ["Ranxi Verba <ranxi.verba@gmail.com>"]
 edition = "2018"
+license = "Apache 2.0"
+repository = "https://github.com/ranxiverba/rac"
+description = "Traits and types to work with elliptic curve and aead cipher"
 
 [dependencies]
 generic-array = { version = "0.12" }
