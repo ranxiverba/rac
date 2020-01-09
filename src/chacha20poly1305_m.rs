@@ -49,8 +49,7 @@ impl Key for Chacha20Poly1305AeadKey {
         &self,
         nonce: u64,
         associated_data: &[u8],
-        input: &[u8],
-        output: &mut [u8],
+        buffer: &mut [u8],
     ) -> GenericArray<u8, Self::TagLength> {
         use byteorder::{ByteOrder, LittleEndian};
         use chacha20poly1305::ChaCha20Poly1305;
@@ -60,20 +59,15 @@ impl Key for Chacha20Poly1305AeadKey {
         LittleEndian::write_u64(&mut nonce_bytes[4..], nonce);
 
         let aead = ChaCha20Poly1305::new(self.0);
-        output.clone_from_slice(input);
-        aead.encrypt_in_place_detached(
-            &nonce_bytes,
-            associated_data,
-            output.as_mut(),
-        ).unwrap()
+        aead.encrypt_in_place_detached(&nonce_bytes, associated_data, buffer)
+            .unwrap()
     }
 
     fn decrypt(
         &self,
         nonce: u64,
         associated_data: &[u8],
-        input: &[u8],
-        output: &mut [u8],
+        buffer: &mut [u8],
         tag: &GenericArray<u8, Self::TagLength>,
     ) -> Result<(), ()> {
         use byteorder::{ByteOrder, LittleEndian};
@@ -84,12 +78,7 @@ impl Key for Chacha20Poly1305AeadKey {
         LittleEndian::write_u64(&mut nonce_bytes[4..], nonce);
 
         let aead = ChaCha20Poly1305::new(self.0);
-        output.clone_from_slice(input);
-        aead.decrypt_in_place_detached(
-            &nonce_bytes,
-            associated_data,
-            output.as_mut(),
-            &tag,
-        ).map_err(|_| ())
+        aead.decrypt_in_place_detached(&nonce_bytes, associated_data, buffer, &tag)
+            .map_err(|_| ())
     }
 }

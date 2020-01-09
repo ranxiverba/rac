@@ -14,16 +14,14 @@ where
         &self,
         nonce: u64,
         associated_data: &[u8],
-        input: &[u8],
-        output: &mut [u8],
+        buffer: &mut [u8],
     ) -> GenericArray<u8, Self::TagLength>;
 
     fn decrypt(
         &self,
         nonce: u64,
         associated_data: &[u8],
-        input: &[u8],
-        output: &mut [u8],
+        buffer: &mut [u8],
         tag: &GenericArray<u8, Self::TagLength>,
     ) -> Result<(), ()>;
 }

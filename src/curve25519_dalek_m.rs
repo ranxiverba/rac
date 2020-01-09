@@ -1,13 +1,8 @@
 use crate::{LineValid, Scalar, Curve};
 
-use generic_array::{
-    GenericArray,
-    typenum::U32,
-};
+use generic_array::{GenericArray, typenum::U32};
 use curve25519_dalek::{
-    constants::ED25519_BASEPOINT_TABLE,
-    montgomery::MontgomeryPoint,
-    scalar::Scalar as C25519Scalar,
+    constants::ED25519_BASEPOINT_TABLE, montgomery::MontgomeryPoint, scalar::Scalar as C25519Scalar,
 };
 
 impl LineValid for C25519Scalar {
@@ -19,7 +14,7 @@ impl LineValid for C25519Scalar {
         buffer[0] &= 248;
         buffer[31] &= 127;
         buffer[31] |= 64;
-    
+
         Ok(C25519Scalar::from_bits(buffer))
     }
 

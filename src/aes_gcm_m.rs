@@ -49,8 +49,7 @@ impl Key for AesGcmAeadKey {
         &self,
         nonce: u64,
         associated_data: &[u8],
-        input: &[u8],
-        output: &mut [u8],
+        buffer: &mut [u8],
     ) -> GenericArray<u8, Self::TagLength> {
         use byteorder::{ByteOrder, BigEndian};
         use aes_gcm::Aes256Gcm;
@@ -60,20 +59,15 @@ impl Key for AesGcmAeadKey {
         BigEndian::write_u64(&mut nonce_bytes[4..], nonce);
 
         let aead = Aes256Gcm::new(self.0);
-        output.clone_from_slice(input);
-        aead.encrypt_in_place_detached(
-            &nonce_bytes,
-            associated_data,
-            output.as_mut(),
-        ).unwrap()
+        aead.encrypt_in_place_detached(&nonce_bytes, associated_data, buffer)
+            .unwrap()
     }
 
     fn decrypt(
         &self,
         nonce: u64,
         associated_data: &[u8],
-        input: &[u8],
-        output: &mut [u8],
+        buffer: &mut [u8],
         tag: &GenericArray<u8, Self::TagLength>,
     ) -> Result<(), ()> {
         use byteorder::{ByteOrder, BigEndian};
@@ -84,12 +78,7 @@ impl Key for AesGcmAeadKey {
         BigEndian::write_u64(&mut nonce_bytes[4..], nonce);
 
         let aead = Aes256Gcm::new(self.0);
-        output.clone_from_slice(input);
-        aead.decrypt_in_place_detached(
-            &nonce_bytes,
-            associated_data,
-            output.as_mut(),
-            &tag,
-        ).map_err(|_| ())
+        aead.decrypt_in_place_detached(&nonce_bytes, associated_data, buffer, &tag)
+            .map_err(|_| ())
     }
 }
