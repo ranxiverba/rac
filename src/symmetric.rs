@@ -1,16 +1,12 @@
 use crate::line::Line;
 
-pub trait Tag
-where
-    Self: Line,
-{
-}
+use generic_array::{GenericArray, ArrayLength};
 
 pub trait Key
 where
     Self: Line,
 {
-    type Tag: Tag;
+    type TagLength: ArrayLength<u8>;
 
     const NAME: &'static str;
 
@@ -20,7 +16,7 @@ where
         associated_data: &[u8],
         input: &[u8],
         output: &mut [u8],
-    ) -> Self::Tag;
+    ) -> GenericArray<u8, Self::TagLength>;
 
     fn decrypt(
         &self,
@@ -28,6 +24,6 @@ where
         associated_data: &[u8],
         input: &[u8],
         output: &mut [u8],
-        tag: Self::Tag,
+        tag: &GenericArray<u8, Self::TagLength>,
     ) -> Result<(), ()>;
 }

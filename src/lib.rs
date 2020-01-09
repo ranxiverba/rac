@@ -11,7 +11,7 @@ mod elliptic;
 pub use self::elliptic::{Scalar, Curve, Signature};
 
 mod symmetric;
-pub use self::symmetric::{Tag, Key};
+pub use self::symmetric::Key;
 
 #[cfg(feature = "secp256k1")]
 mod secp256k1_m;
@@ -19,12 +19,12 @@ mod secp256k1_m;
 #[cfg(feature = "curve25519-dalek")]
 mod curve25519_dalek_m;
 
-#[cfg(all(feature = "chacha20-poly1305-aead", feature = "use_std"))]
-mod chacha20_poly1305_aead_m;
-#[cfg(all(feature = "chacha20-poly1305-aead", feature = "use_std"))]
-pub use self::chacha20_poly1305_aead_m::{Chacha20Poly1305AeadTag, Chacha20Poly1305AeadKey};
+#[cfg(feature = "chacha20poly1305")]
+mod chacha20poly1305_m;
+#[cfg(feature = "chacha20poly1305")]
+pub use self::chacha20poly1305_m::Chacha20Poly1305AeadKey;
 
 #[cfg(feature = "aes-gcm")]
 mod aes_gcm_m;
 #[cfg(feature = "aes-gcm")]
-pub use self::aes_gcm_m::{AesGcmAeadTag, AesGcmAeadKey};
+pub use self::aes_gcm_m::AesGcmAeadKey;
