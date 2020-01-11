@@ -8,6 +8,20 @@ where
     U: LineValid,
     V: LineValid;
 
+impl<U, V> Concat<U, V>
+where
+    U: LineValid,
+    V: LineValid,
+{
+    pub fn as_ref_u(&self) -> &U {
+        &self.0
+    }
+
+    pub fn as_ref_v(&self) -> &V {
+        &self.1
+    }
+}
+
 impl<U, V> LineValid for Concat<U, V>
 where
     U: LineValid,
