@@ -1,5 +1,5 @@
 #![forbid(unsafe_code)]
-#![cfg_attr(not(feature = "use_std"), no_std)]
+#![no_std]
 
 mod line;
 pub use self::line::{LineValid, Line};
